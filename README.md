@@ -20,9 +20,9 @@ const testModeDefaultSubdomain = 'api';
 const nullResponseMessage = "It's a secret to everybody.";
 ```
 
-The listen port is self-explanatory. You may want to --publish the port that you use in the run.sh file. A sample line is provided.
-The production mode / test mode flag is in case you want to test connecting to either subdomain locally without having to hard-code your queries or hosts file.
-Finally, the null response message is what someone sees if an unexpected input is received.
+- The listen port is self-explanatory. You may want to --publish the port that you use in the run.sh file. A sample line is provided.
+- The production mode / test mode flag is in case you want to test connecting to either subdomain locally without having to hard-code your queries or hosts file.
+- Finally, the null response message is what someone sees if an unexpected input is received.
 
 ## Running
 
