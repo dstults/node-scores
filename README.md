@@ -36,7 +36,7 @@ Refer to the source code for advice on how to make sure it works.
 
 ## Open-API for JSON read/write
 
-Someone could totally destroy your hard drive space if you don't be careful. This is strictly for use as a demo project and should not be deployed as such. You'll probably want to password-protect the ability to write new data into the server for the JSON API aspect.
+Someone could totally destroy your hard drive and even potentially take down your entire cluster if you don't add some sort of authorization mechanism. For this reason this is disabled by default.
 
 ## Stay safe
 
