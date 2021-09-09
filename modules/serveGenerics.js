@@ -18,7 +18,7 @@ const serve500 = (res) => {
 	res.end();
 };
 
-const serveHealth = (res) => {
+const serveStatusOK = (res) => {
 	const output = {};
 	output.status = 'good';
 	res.write(JSON.stringify(output));
@@ -48,5 +48,5 @@ const serveIcon = (res) => {
 };
 
 module.exports.serve204 = serve204;
-module.exports.serveHealth = serveHealth;
+module.exports.serveStatusOK = serveStatusOK;
 module.exports.serveIcon = serveIcon;

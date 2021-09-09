@@ -1,66 +1,119 @@
 'use strict';
 
-const makeScore = require('./scoreFactory');
-const getScoreList = require('./scoreListFactory');
+const fs = require('fs');
+const { getScoreData, addUpdateToScores, getPublic, recalcAndResortList } = require('./scoreListFactory');
 const { log, logWarning, logError } = require('../logger');
-const { validateName } = require('../stringHelpers');
+
+const checkModuleAndListExists = (listName) => {
+	if (!fs.existsSync('./modules/scores/list-' + listName + '.js')) {
+		logWarning(`Could not find data module file for list[${listName}]`);
+		return;
+	}
+	if (!fs.existsSync('./data/scores/' + listName + '.json')) {
+		fs.writeFileSync('./data/scores/' + listName + '.json', '[]');
+	}
+
+	return true;
+};
 
 const sendScores = (res, query, limit) => {
-	if (query.list) {
-		const highScores = getScoreList(query.list, limit);
-		if (highScores) {
-			res.write(JSON.stringify(highScores.getPublic()));
-			res.end();
-		} else {
-			logWarning('Score list: [' + query.list + '] not found or unable to load!');
-			global.nullResponse();
-		}
-	} else {
+	if (!query.list) {
 		logWarning('Scores ran without list query set.');
-		global.nullResponse();
+		res.nullResponse();
+		return;
 	}
+
+	if (!checkModuleAndListExists(query.list)) {
+		res.nullResponse();
+		return;
+	}
+
+	const highScores = getScoreData(query.list, limit);
+	if (!highScores) {
+		logWarning('Score list: [' + query.list + '] not found or unable to load!');
+		res.nullResponse();
+	}
+
+	const { publicOperation } = require('./list-' + query.list);
+	res.write(JSON.stringify(getPublic(highScores, publicOperation)));
+	res.end();
 };
 
 const updateScores = (res, query) => {
-	if (query.name)	query.name = validateName(query.name);
-	
-	if (query.list && query.uid && query.name && query.score) {
-		log(`Detected new score: [${query.uid}][${query.name}][${query.score}]`);
-		const score = makeScore(query.uid, query.name, parseInt(query.score));
-		if (!score) {
-			logWarning(`Score update failed due to invalid score: uid[${query.uid}] name[${query.name}] score[${query.score}]`);
-			global.nullResponse();
-			return;
-		}
-
-		const scoreList = getScoreList(query.list);
-		if (!scoreList) {
-			logWarning(`Attempted to update a non-existent score list: list[${query.list}]`);
-			global.nullResponse();
-			return;
-		}
-
-		const rankChangeDescription = scoreList.addEntry(score);
-		if (rankChangeDescription) {
-			if (rankChangeDescription.oldRank) {
-				log(`Score list: list[${query.list}] updated, [${query.name}] went from rank[${rankChangeDescription.oldRank}] to rank[${rankChangeDescription.newRank}].`);
-			} else {
-				log(`Score list: list[${query.list}] updated, [${query.name}] was added at rank[${rankChangeDescription.newRank}].`);
-			}
-			res.write(JSON.stringify(rankChangeDescription));
-			res.end();
-			return;
-		} else {
-			logError(`Score update failed while trying to update list: list[${query.list}]`);
-			global.nullResponse();
-			return;
-		}
-	} else {
-		logWarning(`Score update missing query data: list[${query.list}] uid[${query.uid}] name[${query.name}] score[${query.score}]`);
-		global.nullResponse();
+	if (!query.list || !query.uid) {
+		logError(`Invalid score update query.`);
+		res.nullResponse();
 		return;
 	}
+
+	if (!checkModuleAndListExists(query.list)) {
+		res.nullResponse();
+		return;
+	}
+
+	const { validateInput, scoringAlogrithm } = require('./list-' + query.list);
+	if (!validateInput(query)) {
+		logWarning(`Could not validate query info to generate update data for list[${query.list}].`);
+		res.nullResponse();
+		return;
+	}
+
+	log(`Detected valid score update: [${query.list}][${query.uid}]`);
+	const rawScoreData = getScoreData(query.list, -1);
+	if (!rawScoreData) {
+		logWarning(`Attempted to update a non-existent score list[${query.list}]`);
+		res.nullResponse();
+		return;
+	}
+
+	const rankChangeDescription = addUpdateToScores(query, rawScoreData, query.list, scoringAlogrithm);
+	if (!rankChangeDescription) {
+		logWarning(`Could not update score list[${query.list}] with data from query uid[${query.uid}]`);
+		res.nullResponse();
+		return;
+	}
+		
+	if (rankChangeDescription.oldRank) {
+		log(`Score list: list[${query.list}] updated, [${query.name}] went from rank[${rankChangeDescription.oldRank}] to rank[${rankChangeDescription.newRank}].`);
+	} else if (rankChangeDescription.newRank) {
+		log(`Score list: list[${query.list}] updated, [${query.name}] was added at rank[${rankChangeDescription.newRank}].`);
+	} else {
+		log(`Score list: list[${query.list}] updated, [${query.name}] is currently unranked.`);
+	}
+	res.write(JSON.stringify(rankChangeDescription));
+	res.end();
+	return;
+};
+
+const recalcScores = (res, query) => {
+	if (!query.list) {
+		logError(`Invalid score recalc query.`);
+		res.nullResponse();
+		return;
+	}
+
+	if (!checkModuleAndListExists(query.list)) {
+		res.nullResponse();
+		return;
+	}
+
+	const rawScoreData = getScoreData(query.list, -1);
+	if (!rawScoreData) {
+		logWarning(`Attempted to recalc a non-existent score list[${query.list}]`);
+		res.nullResponse();
+		return;
+	}
+
+	const { scoringAlogrithm } = require('./list-' + query.list);
+	recalcAndResortList(rawScoreData, query.list, scoringAlogrithm);
+
+	const response = {};
+	response.message = 'Scores recalculated and order updated!';
+	res.write(JSON.stringify(response));
+	res.end();
+	return;
 };
 
 module.exports.sendScores = sendScores;
 module.exports.updateScores = updateScores;
+module.exports.recalcScores = recalcScores;

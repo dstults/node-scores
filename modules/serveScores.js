@@ -1,9 +1,9 @@
 'use strict';
 
 const { log, logWarning, logError } = require('./logger');
-const { serve204, serveHealth } = require('./serveGenerics');
+const { serve204, serveStatusOK } = require('./serveGenerics');
 const { parse: parseQuery } = require('querystring'); // deconstruction syntax to rename generic 'parse' as 'parseQuery'
-const { sendScores, updateScores } = require('./scores/scoreHandler');
+const { sendScores, updateScores, recalcScores } = require('./scores/scoreHandler');
 
 const serveScores = (req, res, urlData) => {
 	const query = parseQuery(urlData.search.substr(1)); // remove leading ? and parse
@@ -12,7 +12,7 @@ const serveScores = (req, res, urlData) => {
 			serve204(res);
 			break;
 		case "/health":
-			serveHealth(res);
+			serveStatusOK(res);
 			break;
 		case "/top-five":
 			sendScores(res, query, 5);
@@ -23,14 +23,20 @@ const serveScores = (req, res, urlData) => {
 		case "/top-twenty":
 			sendScores(res, query, 20);
 			break;
-		case "/all":
-			sendScores(res, query);
+		case "/top-thirty":
+			sendScores(res, query, 30);
+			break;
+		case "/top-one-hundred":
+			sendScores(res, query, 100);
 			break;
 		case "/update":
 			updateScores(res, query);
 			break;
+		case "/recalc":
+			recalcScores(res, query);
+			break;
 		default:
-			nullResponse();
+			res.nullResponse();
 			break;
 	}
 };

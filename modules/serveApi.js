@@ -1,9 +1,9 @@
 'use strict';
 
 const { log, logWarning, logError } = require('./logger');
-const { serve204, serveHealth } = require('./serveGenerics');
+const { serve204, serveStatusOK } = require('./serveGenerics');
 const { parse: parseQuery } = require('querystring'); // deconstruction syntax to rename generic 'parse' as 'parseQuery'
-
+const { getJson, setJson } = require('./json/jsonIO');
 
 const serveApi = (req, res, urlData) => {
 	const query = parseQuery(urlData.search.substr(1)); // remove leading ? and parse
@@ -12,15 +12,44 @@ const serveApi = (req, res, urlData) => {
 			serve204(res);
 			break;
 		case "/health":
-			serveHealth(res);
+			serveStatusOK(res);
 			break;
 		case "/death":
-			nullResponse(); // pretend nothing happened to the end user
+			res.nullResponse(); // pretend nothing happened to the end user
 			logWarning('Server kill order received!');
 			global.server.close();
 			process.exit();
+		case "/json":
+			let key;
+			let json;
+
+			if (query['key']) key = query['key'];
+			if (!key) {
+				res.nullResponse();
+				return;
+			}
+
+			if (query['value']) json = query['value'];
+			if (!json) {
+				json = getJson(key);
+				res.write(JSON.stringify(json));
+				res.end();
+				return;
+			}
+
+			try {
+				json = JSON.parse(json);
+			} catch (ex) {
+				res.write(JSON.stringify(getJson(key)));
+				res.end();
+				return;
+			}
+
+			setJson(key, json);
+			serveStatusOK(res);
+			return;
 		default:
-			nullResponse();
+			res.nullResponse();
 			break;
 	}
 };

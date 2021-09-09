@@ -9,14 +9,16 @@ class RankChangeDetails {
 		this.oldScore = oldScore;
 		this.newRank = newRank;
 		this.newScore = newScore;
-		if (oldRank > 0) {
-			if (newRank < oldRank) { // low is high -- ranking "1st" place is better than "2nd"
-				this.message = `Congratulations, ${name}! Your ranking went up from [ ${rankWithSuffix(oldRank)} ] place to [ ${rankWithSuffix(newRank)} ] place!`;
-			} else if (newRank === oldRank) {
-				this.message = `Congratulations, ${name}! Your ranking is still at [ ${rankWithSuffix(oldRank)} ] place!`;
-			} else if (newRank > oldRank) {
-				this.message = `Congratulations, ${name}! Your ranking has dropped from [ ${rankWithSuffix(oldRank)} ] place to [ ${rankWithSuffix(newRank)} ] place, keep trying hard!`;
-			}
+		if (newRank === undefined) {
+			this.message = `Well, ${name}, it looks like you are unranked!`;
+		// } else if (oldRank > 0) {
+		// 	if (newRank < oldRank) { // low is high -- ranking "1st" place is better than "2nd"
+		// 		this.message = `Congratulations, ${name}! Your ranking went up from [ ${rankWithSuffix(oldRank)} ] place to [ ${rankWithSuffix(newRank)} ] place!`;
+		// 	} else if (newRank === oldRank) {
+		// 		this.message = `Congratulations, ${name}! Your ranking is still at [ ${rankWithSuffix(oldRank)} ] place!`;
+		// 	} else if (newRank > oldRank) {
+		// 		this.message = `Congratulations, ${name}! Your ranking has dropped from [ ${rankWithSuffix(oldRank)} ] place to [ ${rankWithSuffix(newRank)} ] place, keep trying hard!`;
+		// 	}		
 		} else {
 			this.message = `Congratulations, ${name}! Your ranking is [ ${rankWithSuffix(newRank)} ]!`;
 		}
@@ -24,8 +26,8 @@ class RankChangeDetails {
 }
 
 const makeRankChangeDetails = (name, oldRank, oldScore, newRank, newScore) => {
-	oldRank++; // base 1 for viewer consumption
-	newRank++; // base 1 for viewer consumption
+	if (oldRank !== undefined) oldRank++; // base 1 for viewer consumption
+	if (newRank !== undefined) newRank++; // base 1 for viewer consumption
 	return new RankChangeDetails(name, oldRank, oldScore, newRank, newScore);
 }
 

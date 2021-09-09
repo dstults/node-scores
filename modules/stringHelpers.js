@@ -10,11 +10,10 @@ const randomUID = () => {
 	return result.join('');
 };
 
-const validateName = (name) => {
-	const length = 24;
+const validateName = (name, maxLength = 24) => {
 	name = name.replace( /[^0-9a-zA-Z ]/g, '');
-	name = name.replace( /  /g, ' ');
-	if (name.length > length) name = name.substr(0, length);
+	name = name.trim().replace( /  /g, ' ');
+	if (name.length > maxLength) name = name.substr(0, maxLength);
 	return name;
 };
 

@@ -1,13 +1,11 @@
 'use strict';
 
 const fs = require('fs');
-const makeScore = require('./scoreFactory');
 const { log, logWarning, logError } = require('../logger');
 const { makeRankChangeDetails } = require('./scoreChangeFactory');
 const { shallowCompare } = require('../compareObjects');
 
-const maxScoreCountLimit = 200;
-
+/*
 class ScoreList {
 	constructor(filePath, rawScoreData, displayLimit) {
 		this.filePath = filePath;
@@ -16,7 +14,7 @@ class ScoreList {
 		let score;
 		for (let i = 0; i < rawScoreData.length; i++) {
 			score = rawScoreData[i];
-			score = makeScore(score.uid, score.name, score.score);
+			score = createScoreUpdate(score.uid, score.name, score.score);
 			if (score) this.scores.push(score);
 		}
 		this.sortReverse();
@@ -54,58 +52,18 @@ class ScoreList {
 		return output;
 	}
 
-	sortReverse() {
-		if (this.scores) {
-			this.scores.sort((a, b) => a.score <= b.score ? 1 : -1);
-		}
-	}
-
-	saveScores = () => {
-		if (!this.filePath) {
-			logError('Error: Attempted to save a score list without a file path!');
-			return;
-		}
-		if (!this.scores) {
-			logError('Error: Attempted to save a score list without any score data!');
-			return;
-		}
-
-		try {
-			const scoreCheck = JSON.parse(JSON.stringify(this.scores));
-			/*	// This fails no matter what because the this.scores are actual Score objects,
-				// whereas in the JSON version they're plain ol' Object objects.
-			if (!shallowCompare(this.scores, scoreCheck)) {
-				console.log(this.scores);
-				console.log(scoreCheck);
-				logError(`Could not validate save data, aborting.`);
-				return;
-			} */
-		} catch {
-			logError('Received invalid save data, aborting save.');
-			return;
-		}
-
-		if (this.scores.length > maxScoreCountLimit) this.scores = this.scores.splice(0, maxScoreCountLimit);
-
-		fs.writeFile(this.filePath, JSON.stringify(this.scores, null, '\t'), err => {
-			if (err) {
-				logError(`Error writing to path [${this.filePath}]: [${err}]`);
-			} else {
-				log('File saved to: ' + this.filePath);
-			}
-		});
-	}
 }
+*/
 
 /**
  * @param {string} path File name of the score file
  * @returns {ScoreList} a list of scores
  */
-const getScoreList = (path, displayLimit) => {
+const getScoreData = (path, displayLimit = 10) => {
 	if (!path) return undefined;
 	if (typeof path !== 'string') return undefined;
 
-	const fullPath = './scores/' + path + '.txt';
+	const fullPath = './data/scores/' + path + '.json';
 	try {
 		const fileExists = fs.existsSync(fullPath);
 		if (!fileExists) {
@@ -133,9 +91,101 @@ const getScoreList = (path, displayLimit) => {
 		return undefined;
 	}
 
-	if (typeof displayLimit !== 'number' || !displayLimit) displayLimit = 30;
+	if (!displayLimit || typeof displayLimit !== 'number') {
+		displayLimit = 10;
+	}
+	if (displayLimit !== -1) {
+		scoreArray = scoreArray.splice(0, displayLimit);
+	}
 
-	return new ScoreList(fullPath, scoreArray, displayLimit);
+	return scoreArray;
 };
 
-module.exports = getScoreList;
+const maxScoreCountLimit = 200;
+
+const addUpdateToScores = (newScoreData, listData, listName, scoringAlogrithm) => {
+	if (!newScoreData || !listData || !listName || !scoringAlogrithm) {
+		if (!newScoreData) logError('addUpdateToScores passed undefined arg (score)');
+		if (!listData) logError('addUpdateToScores passed undefined arg (scoreList)');
+		if (!listName) logError('addUpdateToScores passed undefined arg (listName)');
+		if (!scoringAlogrithm) logError('addUpdateToScores passed undefined arg (scoringAlgorithm)');
+		return undefined;
+	}
+
+	// Get old stats
+	const oldIndex = listData.findIndex(s => s.uid === newScoreData.uid);
+	const oldRank = oldIndex === -1 ? undefined : listData[oldIndex].score === undefined ? undefined : oldIndex;
+	const oldScore = oldRank === undefined ? undefined : listData[oldIndex].score;
+
+	// Add new score and calculate its score
+	if (oldIndex === -1) {
+		listData.push({uid: newScoreData.uid});
+		scoringAlogrithm(listData[listData.length - 1], newScoreData);
+	} else {
+		scoringAlogrithm(listData[oldIndex], newScoreData);
+	}
+
+	// Sort and save the score list
+	sortAndSaveScoreList(listData, listName);
+
+	// Get new rank and return formatted response
+	const newIndex = listData.findIndex(s => s.uid === newScoreData.uid);
+	const newRank = listData[newIndex].score === undefined ? undefined : newIndex;
+	return makeRankChangeDetails(newScoreData.name, oldRank, oldScore, newRank, listData[newIndex].score);
+};
+
+const recalcAndResortList = (listData, listName, scoringAlogrithm) => {
+	if (!listData || !listName || !scoringAlogrithm) {
+		if (!listData) logError('recalcAndResortList passed undefined arg (scoreList)');
+		if (!listName) logError('recalcAndResortList passed undefined arg (listName)');
+		if (!scoringAlogrithm) logError('recalcAndResortList passed undefined arg (scoringAlgorithm)');
+		return undefined;
+	}
+
+	for (let i = 0; i < listData.length; i++) {
+		//let oldS = listData[i].score;
+		scoringAlogrithm(listData[i]);
+		//let newS = listData[i].score;
+		//console.log(oldS + ' => ' + newS);
+	}
+
+	// Sort and save the score list
+	sortAndSaveScoreList(listData, listName);
+
+};
+
+const sortAndSaveScoreList = (listData, listName) => {
+	if (!listData || !listName) {
+		logError('sortAndSaveScoreList passed undefined arg (listData and/or filePath)');
+		return undefined;
+	}
+
+	// Sort in reverse order
+	listData.sort((a, b) => {
+		//if (a.score === undefined && b.score === undefined) return 0;
+		if (a.score === b.score) return 0;
+		if (a.score === undefined) return 1;
+		if (b.score === undefined) return -1;
+
+		return a.score <= b.score ? 1 : -1
+	});
+
+	// Save updated and sorted list
+	if (listData.length > maxScoreCountLimit) listData = listData.splice(0, maxScoreCountLimit);
+	fs.writeFile('./data/scores/' + listName + '.json', JSON.stringify(listData, null, '\t'), err => {
+		if (err) {
+			logError(`Error writing to path [${listName}]: [${err}]`);
+		} else {
+			log('File saved to: ' + listName);
+		}
+	});
+};
+
+const getPublic = (scoreList, publicOperation) => {
+	return scoreList.filter(s => s.public).map(publicOperation);
+};
+
+module.exports.getScoreData = getScoreData;
+module.exports.addUpdateToScores = addUpdateToScores;
+module.exports.recalcAndResortList = recalcAndResortList;
+module.exports.getPublic = getPublic;
