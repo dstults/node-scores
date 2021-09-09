@@ -24,7 +24,10 @@ const serveApi = (req, res, urlData) => {
 			
 			//global.server.close();
 			//process.exit();
+			break;
 		case "/json":
+			// This is a security vulnerability so I've disabled it:
+			/* 
 			let key;
 			let json;
 
@@ -52,7 +55,11 @@ const serveApi = (req, res, urlData) => {
 
 			setJson(key, json);
 			serveStatusOK(res);
-			return;
+			*/
+			res.nullResponse(); // pretend nothing happened to the end user
+			logWarning('Disabled JSON I/O function was requested!');
+
+			break;
 		default:
 			res.nullResponse();
 			break;
