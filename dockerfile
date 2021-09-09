@@ -7,8 +7,11 @@ COPY package*.json ./
 # For production
 RUN npm ci --only=production
 
-COPY . .
+# Instead of this, just set with -v at run-time...
+#COPY . .
 
-# Set with -p at run-time...
+# Instead of this, just set with -p at run-time...
 #EXPOSE 3029/tcp
-CMD [ "node", "server.js" ]
+
+# Run once:
+CMD [ "node", "." ]
