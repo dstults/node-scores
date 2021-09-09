@@ -1,0 +1,12 @@
+{
+  "name": "docker_node_web_app",
+  "version": "0.8.0",
+  "description": "Node.js on Docker",
+  "author": "Darren Stults <drankof@gmail.com>",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+  }
+}
