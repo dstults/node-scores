@@ -15,4 +15,4 @@ docker run \
 	--detach \
 	node-scores
 
-#	--publish "3300:3300" \
+#	--publish "80:3329" \
