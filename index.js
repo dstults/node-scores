@@ -1,13 +1,14 @@
 'use strict';
 
 const fs = require('fs');
-const http = require("http");
-const { URL } = require('url');
-const queryString = require('querystring');
-const ScoresList = require('./classes/ScoresList');
-const Score = require('./classes/Score');
+const IconReplies = require('./modules/iconReplies');
+const ScoreHandler = require('./modules/scoreHandler');
 
-const listenPort = 3329;
+const http = require("http");
+const queryString = require('querystring');
+
+const listenPort = 3000;
+const healthReply = '1';
 const nullReply = "It's a secret to everybody.";
 
 const getTimestamp = () => {
@@ -57,32 +58,14 @@ const server = http.createServer((req, res) => {
 	const query = queryString.parse(urlData.search.substr(1)); // remove leading ? and parse
 
 	switch (urlData.pathname) {
-		case "/death":
-			console.log('Restarting server...');
-			res.write(nullReply); // pretend nothing is happening to the outside
-			server.close();
+		case "/health":
+			res.write(healthReply);
 			break;
 		case "/favicon.ico":
-			res.writeHead(204);
-			res.end();
+			IconReplies.serve204(res);
 			return;
 		case "/scores":
-			if (query.list) {
-				let score;
-				if (query.name && query.score) {
-					console.log(`Detected new score: [${query.name}][${query.score}]`);
-					score = new Score(score.name, parseInt(score.score));
-				} else {
-					score = undefined;
-				}
-				const highScores = new ScoresList('./scores/' + query.list + '.txt', score);
-				if (highScores.scores) {
-					res.setHeader('Content-Type', 'application/json');
-					res.write(JSON.stringify(highScores.scores));
-				} else {
-					console.log(`Could not find list: [${query.list}]`);
-				}
-			}
+			ScoreHandler.loadScores(query, res);
 			break;
 		default:
 			res.write(nullReply);
@@ -92,4 +75,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(listenPort);
+
 console.log(`Listening on port ${listenPort}...`);
