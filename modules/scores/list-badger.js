@@ -1,5 +1,11 @@
 'use strict';
 
+// This is a example of how a server can do on-server score validation to help
+// prevent abuse of the system. To be make your scoring server more secure make
+// sure that you hide the source code and override the CORS policy so that the
+// source must be from a known source. You can also use salted passwords if
+// the source is going to be from a game or similar program.
+
 const { log, logWarning, logError } = require('../logger');
 const { validateName } = require('../stringHelpers');
 

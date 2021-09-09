@@ -18,7 +18,8 @@ const serve500 = (res) => {
 	res.end();
 };
 
-const serveStatusOK = (res) => {
+const serveHealthStatus = (res) => {
+	// If connected to anything else, i.e. a NoSQL server, connection should be checked here.
 	const output = {};
 	output.status = 'good';
 	res.write(JSON.stringify(output));
@@ -48,5 +49,5 @@ const serveIcon = (res) => {
 };
 
 module.exports.serve204 = serve204;
-module.exports.serveStatusOK = serveStatusOK;
+module.exports.serveHealthStatus = serveHealthStatus;
 module.exports.serveIcon = serveIcon;

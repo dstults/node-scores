@@ -1,7 +1,7 @@
 'use strict';
 
 const { log, logWarning, logError } = require('./logger');
-const { serve204, serveStatusOK } = require('./serveGenerics');
+const { serve204, serveHealthStatus } = require('./serveGenerics');
 const { parse: parseQuery } = require('querystring'); // deconstruction syntax to rename generic 'parse' as 'parseQuery'
 const { getJson, setJson } = require('./json/jsonIO');
 
@@ -12,13 +12,18 @@ const serveApi = (req, res, urlData) => {
 			serve204(res);
 			break;
 		case "/health":
-			serveStatusOK(res);
+			serveHealthStatus(res);
 			break;
 		case "/death":
+			// If using live-updated code, this alongside a password-checking process will let you
+			// restart the server with a single command. If using open source however, this will be
+			// a cheap and easy denial of service vulnerability, so it is disabled by default.
+
 			res.nullResponse(); // pretend nothing happened to the end user
-			logWarning('Server kill order received!');
-			global.server.close();
-			process.exit();
+			logWarning('Server kill order was given!');
+			
+			//global.server.close();
+			//process.exit();
 		case "/json":
 			let key;
 			let json;

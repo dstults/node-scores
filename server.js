@@ -43,7 +43,7 @@ const server = http.createServer((req, res) => {
 	res.nullResponse = nullResponse;
 
 	// Prepare log message
-	const clientIp = req.headers['x-real-ip'] ? req.headers['x-real-ip'] : req.socket.address().address;
+	const clientIp = req.headers['x-real-ip'] ? req.headers['x-real-ip'] : req.connection.remoteAddress;
 	const protocol = req.headers['x-forwarded-proto'] ? req.headers['x-forwarded-proto'] : 'http';
 	const logMessage = `<< [${clientIp}] [${req.method}] [${protocol}://${req.headers.host}${req.url}]`;
 
@@ -57,15 +57,15 @@ const server = http.createServer((req, res) => {
 	}
 	log(logMessage);
 
-	// Normal procedure
+	// Routing
 	const urlData = new URL(`${protocol}://${req.headers.host}${req.url}`);
 	switch (subdomain) {
 		case 'api':
-			// Launch general API
+			// Launch general API (i.e. api.example.com)
 			serveApi(req, res, urlData);
 			break;
 		case 'scores':
-			// Launch score API
+			// Launch score API (i.e. scores.example.com)
 			serveScores(req, res, urlData);
 			break;
 		default:
