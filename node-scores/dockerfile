@@ -1,5 +1,8 @@
 FROM node:14
 WORKDIR /usr/src/app
+
+# Copy the desired .json files from the src directory
+# into the dockerbuild folder each time before building
 COPY src/package*.json ./
 
 # For testing
@@ -8,7 +11,7 @@ COPY src/package*.json ./
 RUN npm ci --only=production
 
 # Instead of this, just set with -v at run-time...
-COPY src .
+#COPY src .
 
 # Instead of this, just set with -p at run-time...
 #EXPOSE 3029/tcp
