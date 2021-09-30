@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const { getCompactDatestamp } = require('./timestamps');
-const folderPath = './logs/';
+const folderPath = require('../config').logPath;
 const { getTimestamp } = require('./timestamps');
 
 const appendTimestamp = (message) => {
@@ -29,7 +29,7 @@ const checkMakeFolder = () => {
 const saveToIgnoreLog = (message) => {
 	if (checkMakeFolder()) {
 		//console.log('Attempting to append to log file: ' + folderPath + 'logs' + getCompactDatestamp() + '.txt');
-		fs.appendFile(folderPath + 'ignore' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
+		fs.appendFile(folderPath + '/ignore' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
 			if (err) {
 				console.log(err);
 				return false;
@@ -43,8 +43,8 @@ const saveToIgnoreLog = (message) => {
 
 const saveToBaseLog = (message) => {
 	if (checkMakeFolder()) {
-		//console.log('Attempting to append to log file: ' + folderPath + 'logs' + getCompactDatestamp() + '.txt');
-		fs.appendFile(folderPath + 'logs' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
+		//console.log('Attempting to append to log file: ' + folderPath + '/logs' + getCompactDatestamp() + '.txt');
+		fs.appendFile(folderPath + '/logs' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
 			if (err) {
 				console.log(err);
 				return false;
@@ -76,7 +76,7 @@ const logWarning = (message, addTimestamp = true) => {
 	console.warn(message);
 
 	if (saveToBaseLog(message)) {
-		fs.appendFile(folderPath + 'warnings' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
+		fs.appendFile(folderPath + '/warnings' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
 			if (err) console.log(err);
 		});
 	}
@@ -88,7 +88,7 @@ const logError = (message, addTimestamp = true) => {
 	console.error(message);
 
 	if (saveToBaseLog(message)) {
-		fs.appendFile(folderPath + 'errors' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
+		fs.appendFile(folderPath + '/errors' + getCompactDatestamp() + '.txt', message + '\n', (err) => {
 			if (err) console.log(err);
 		});
 	}

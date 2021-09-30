@@ -5,6 +5,8 @@ const { log, logWarning, logError } = require('../logger');
 const { makeRankChangeDetails } = require('./scoreChangeFactory');
 const { shallowCompare } = require('../compareObjects');
 
+const dataPath = require('../../config').dataPath;
+
 /*
 class ScoreList {
 	constructor(filePath, rawScoreData, displayLimit) {
@@ -63,7 +65,7 @@ const getScoreData = (path, displayLimit = 10) => {
 	if (!path) return undefined;
 	if (typeof path !== 'string') return undefined;
 
-	const fullPath = './data/scores/' + path + '.json';
+	const fullPath = dataPath + '/scores/' + path + '.json';
 	try {
 		const fileExists = fs.existsSync(fullPath);
 		if (!fileExists) {
@@ -172,7 +174,7 @@ const sortAndSaveScoreList = (listData, listName) => {
 
 	// Save updated and sorted list
 	if (listData.length > maxScoreCountLimit) listData = listData.splice(0, maxScoreCountLimit);
-	fs.writeFile('./data/scores/' + listName + '.json', JSON.stringify(listData, null, '\t'), err => {
+	fs.writeFile(dataPath + '/scores/' + listName + '.json', JSON.stringify(listData, null, '\t'), err => {
 		if (err) {
 			logError(`Error writing to path [${listName}]: [${err}]`);
 		} else {

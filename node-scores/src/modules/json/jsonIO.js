@@ -5,7 +5,8 @@
 let jsons;
 const fs = require('fs');
 const { log, logWarning, logError } = require('../logger');
-const filePath = './data/json/json.json';
+const dataPath = require('../../config').dataPath;
+const filePath = dataPath + '/json/json.json';
 const { shallowCompare } = require('../compareObjects');
 
 const loadData = () => {

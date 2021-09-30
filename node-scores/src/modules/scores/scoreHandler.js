@@ -4,13 +4,15 @@ const fs = require('fs');
 const { getScoreData, addUpdateToScores, getPublic, recalcAndResortList } = require('./scoreListFactory');
 const { log, logWarning, logError } = require('../logger');
 
+const dataPath = require('../../config').dataPath;
+
 const checkModuleAndListExists = (listName) => {
 	if (!fs.existsSync('./modules/scores/list-' + listName + '.js')) {
 		logWarning(`Could not find data module file for list[${listName}]`);
 		return;
 	}
-	if (!fs.existsSync('./data/scores/' + listName + '.json')) {
-		fs.writeFileSync('./data/scores/' + listName + '.json', '[]');
+	if (!fs.existsSync(dataPath + '/scores/' + listName + '.json')) {
+		fs.writeFileSync(dataPath + '/scores/' + listName + '.json', '[]');
 	}
 
 	return true;
