@@ -4,10 +4,7 @@
 //   CONFIGURATION
 // -------------------------------------------------------------------------
 
-const listenPort = 3329;
-const productionMode = true; // false => defaults to designated subdomain
-const testModeDefaultSubdomain = 'api';
-const nullResponseMessage = "It's a secret to everybody.";
+const config = require('./config');
 
 // -------------------------------------------------------------------------
 //   IMPORTS
@@ -26,7 +23,7 @@ const { getTimestamp } = require('./modules/timestamps');
 // -------------------------------------------------------------------------
 
 log(`-------------------------------------------------------------------------\n[${getTimestamp()}] Launching server...`, false);
-if (!productionMode) logWarning(`Server is NOT in production mode! Default subdomain set to: [${testModeDefaultSubdomain}]`, false);
+if (!config.productionMode) logWarning(`Server is NOT in production mode! Default subdomain set to: [${config.testModeDefaultSubdomain}]`, false);
 
 const server = http.createServer((req, res) => {
 
@@ -37,18 +34,18 @@ const server = http.createServer((req, res) => {
 	const nullResponse = () => {
 		res.setHeader('Content-Type', 'text/plain');
 		res.setHeader('Cache-Control', 'No-Cache');
-		res.write(nullResponseMessage);
+		res.write(config.nullResponseMessage);
 		res.end();
 	};
 	res.nullResponse = nullResponse;
 
 	// Prepare log message
-	const clientIp = req.headers['x-real-ip'] ? req.headers['x-real-ip'] : req.connection.remoteAddress;
+	const clientIp = req.headers['x-real-ip'] ? req.headers['x-real-ip'] : req.socket.remoteAddress;
 	const protocol = req.headers['x-forwarded-proto'] ? req.headers['x-forwarded-proto'] : 'http';
 	const logMessage = `<< [${clientIp}] [${req.method}] [${protocol}://${req.headers.host}${req.url}]`;
 
 	// Log Message
-	const subdomain = productionMode ? req.headers.host.split('.')[0] : testModeDefaultSubdomain;
+	const subdomain = config.productionMode ? req.headers.host.split('.')[0] : config.testModeDefaultSubdomain;
 	if (logMessage.includes('favicon.ico') || (subdomain !== 'api' && subdomain !== 'scores')) {
 		// Short-circuit out if to be ignored
 		logIgnore(logMessage);
@@ -89,8 +86,8 @@ process.on('uncaughtException', (err) => {
 });
 
 global.server = server;
-server.listen(listenPort, '0.0.0.0');
-log(`-------------------------------------------------------------------------\n[${getTimestamp()}] Listening on port ${listenPort}...`, false);
+server.listen(config.listenPort, '0.0.0.0');
+log(`-------------------------------------------------------------------------\n[${getTimestamp()}] Listening on port ${config.listenPort}...`, false);
 
 process.on('exit', () => {
 	log(`Server shut down!\n-------------------------------------------------------------------------\n`);
