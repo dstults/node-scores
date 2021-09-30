@@ -7,56 +7,6 @@ const { shallowCompare } = require('../compareObjects');
 
 const dataPath = require('../../config').dataPath;
 
-/*
-class ScoreList {
-	constructor(filePath, rawScoreData, displayLimit) {
-		this.filePath = filePath;
-		this.scores = [];
-		this.displayLimit = displayLimit;
-		let score;
-		for (let i = 0; i < rawScoreData.length; i++) {
-			score = rawScoreData[i];
-			score = createScoreUpdate(score.uid, score.name, score.score);
-			if (score) this.scores.push(score);
-		}
-		this.sortReverse();
-	}
-
-	addEntry(score) {
-		if (!score) return; // These have already been checked but I just want to make extra sure
-		if (!score.uid || !score.name || !score.score) return; // that I double-check things
-
-		// Get old stats
-		const oldRank = this.scores.findIndex(s => s.uid === score.uid);
-		const oldScore = oldRank === -1 ? undefined : this.scores[oldRank].score;
-
-		// Add new score and sort and save
-		if (oldRank === -1)
-			this.scores.push(score);
-		else
-			this.scores[oldRank] = score;
-		this.sortReverse();
-		this.saveScores();
-
-		// Get new rank and return formatted response
-		const newRank = this.scores.findIndex(s => s.uid === score.uid);
-		return makeRankChangeDetails(score.name, oldRank, oldScore, newRank, score.score);
-	}
-
-	getPublic() {
-		const output = [];
-		let score;
-		for (let i = 0; i < this.scores.length; i++) {
-			score = this.scores[i];
-			output.push(score.getPublic());
-		}
-		if (output.length > this.displayLimit) output = output.splice(0, this.displayLimit);
-		return output;
-	}
-
-}
-*/
-
 /**
  * @param {string} path File name of the score file
  * @returns {ScoreList} a list of scores
